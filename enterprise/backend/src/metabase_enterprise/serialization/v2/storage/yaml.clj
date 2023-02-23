@@ -33,7 +33,7 @@
           (log/info "Storing"
                     (if (= :full (:type entity)) "data:" "metadata:")
                     ;; friendlier description of what we're exporting
-                    (->> entity :serdes/meta (map (comp (partial str/join "#") (juxt :model :id))) (str/join "/")))
+                    (-> entity :serdes/meta u.yaml/path-str))
           (spit-yaml file (dissoc entity :serdes/meta)))))
     (log/info "Storing settings")
     (spit-yaml (io/file root-dir "settings.yaml")

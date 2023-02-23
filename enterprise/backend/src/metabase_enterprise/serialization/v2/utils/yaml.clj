@@ -33,6 +33,11 @@
         basename    (str (last base-path) ".yaml")]
     (map escape-segment (concat dirnames [basename]))))
 
+(defn path-str
+  "Returns a human-readable path string from a sequence of path elements (like in :serdes/meta)"
+  [elements]
+  (->> elements (map (comp (partial str/join "#") (juxt :model :id))) (str/join "/")))
+
 (defn path-split
   "Given a root directory and a file underneath it, return a sequence of path parts to get there.
   Given a root of /foo and file /foo/bar/baz/this.file, returns `[\"bar\" \"baz\" \"this.file\"]`."
