@@ -1,7 +1,6 @@
 (ns metabase-enterprise.serialization.v2.storage.yaml
   (:require
    [clojure.java.io :as io]
-   [clojure.string :as str]
    [metabase-enterprise.serialization.v2.utils.yaml :as u.yaml]
    [metabase.models.serialization.base :as serdes.base]
    [metabase.util.date-2 :as u.date]
