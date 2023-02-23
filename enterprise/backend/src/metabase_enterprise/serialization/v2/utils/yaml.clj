@@ -1,6 +1,5 @@
 (ns metabase-enterprise.serialization.v2.utils.yaml
   (:require
-   [clojure.java.io :as io]
    [clojure.string :as str]
    [metabase.models.serialization.base :as serdes.base])
   (:import
@@ -24,15 +23,15 @@
       (str/replace "__SLASH__"     "/")
       (str/replace "__BACKSLASH__" "\\")))
 
-(defn hierarchy->file
-  "Given an extracted entity, return a [[File]] corresponding to it."
-  ^File [ctx entity]
+(defn hierarchy->path-components
+  "Given an extracted entity, return a seq of relative path components to it"
+  [ctx entity]
   (let [;; Get the desired [[serdes.base/storage-path]].
         base-path   (serdes.base/storage-path entity ctx)
         dirnames    (drop-last base-path)
         ;; Attach the file extension to the last part.
         basename    (str (last base-path) ".yaml")]
-    (apply io/file (:root-dir ctx) (map escape-segment (concat dirnames [basename])))))
+    (map escape-segment (concat dirnames [basename]))))
 
 (defn path-split
   "Given a root directory and a file underneath it, return a sequence of path parts to get there.
