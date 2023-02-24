@@ -79,7 +79,8 @@
   ;(when-not (load/compatible? path)
   ;  (log/warn (trs "Dump was produced using a different version of Metabase. Things may break!")))
   (log/info (trs "Loading serialized Metabase files from {0}" path))
-  (v2.load/load-metabase (v2.ingest/ingest-yaml path)))
+  (v2.load/load-metabase (v2.ingest/ingest-yaml path))
+  (log/info (trs "Loading serialized Metabase files from {0} complete!" path)))
 
 (defn load
   "Load serialized metabase instance as created by `dump` command from directory `path`."
@@ -192,10 +193,10 @@
       (v2.extract/extract-metabase opts))))
 
 (defn- v2-dump [path opts]
-  (log/info "Exporting Metabase to" path (u/emoji "🏭 🚛💨"))
+  (log/info (trs "Exporting Metabase to {0}" path) (u/emoji "🏭 🚛💨"))
   (-> (v2-extract opts)
       (v2.storage/store! path))
-  (log/info "Export to" path "complete!" (u/emoji "🚛💨 📦")))
+  (log/info (trs "Exporting Metabase to {0} complete!" path) (u/emoji "🚛💨 📦")))
 
 (defn dump
   "Serializes Metabase instance into directory `path`."

@@ -228,7 +228,7 @@
 
 (defn- log-and-extract-one
   [model opts instance]
-  (log/info "Extracting" (str model "#" (:id instance)))
+  (log/info "Extracting" model (:id instance))
   (extract-one model opts instance))
 
 (defmethod extract-all :default [model opts]
