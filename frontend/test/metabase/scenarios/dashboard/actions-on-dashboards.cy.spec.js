@@ -26,26 +26,27 @@ const TEST_COLUMNS_TABLE = "many_data_types";
 const MODEL_NAME = "Test Action Model";
 
 ["mysql", "postgres"].forEach(dialect => {
+  beforeEach(() => {
+    cy.intercept("GET", /\/api\/card\/\d+/).as("getModel");
+    cy.intercept("GET", "/api/card?f=using_model&model_id=**").as(
+      "getCardAssociations",
+    );
+    cy.intercept("GET", "/api/action?model-id=*").as("getActions");
+
+    cy.intercept("GET", "/api/dashboard/*/dashcard/*/execute?parameters=*").as(
+      "executePrefetch",
+    );
+
+    cy.intercept("POST", "/api/dashboard/*/dashcard/*/execute").as(
+      "executeAPI",
+    );
+  });
+
   describe(
     `Write Actions on Dashboards (${dialect})`,
     { tags: ["@external", "@actions"] },
     () => {
       beforeEach(() => {
-        cy.intercept("GET", /\/api\/card\/\d+/).as("getModel");
-        cy.intercept("GET", "/api/card?f=using_model&model_id=**").as(
-          "getCardAssociations",
-        );
-        cy.intercept("GET", "/api/action?model-id=*").as("getActions");
-
-        cy.intercept(
-          "GET",
-          "/api/dashboard/*/dashcard/*/execute?parameters=*",
-        ).as("executePrefetch");
-
-        cy.intercept("POST", "/api/dashboard/*/dashcard/*/execute").as(
-          "executeAPI",
-        );
-
         resetTestTable({ type: dialect, table: TEST_TABLE });
         restore(`${dialect}-writable`);
         cy.signInAsAdmin();
@@ -226,21 +227,6 @@ const MODEL_NAME = "Test Action Model";
     { tags: ["@external", "@actions"] },
     () => {
       beforeEach(() => {
-        cy.intercept("GET", /\/api\/card\/\d+/).as("getModel");
-        cy.intercept("GET", "/api/card?f=using_model&model_id=**").as(
-          "getCardAssociations",
-        );
-        cy.intercept("GET", "/api/action?model-id=*").as("getActions");
-
-        cy.intercept(
-          "GET",
-          "/api/dashboard/*/dashcard/*/execute?parameters=*",
-        ).as("executePrefetch");
-
-        cy.intercept("POST", "/api/dashboard/*/dashcard/*/execute").as(
-          "executeAPI",
-        );
-
         resetTestTable({ type: dialect, table: TEST_COLUMNS_TABLE });
         restore(`${dialect}-writable`);
         cy.signInAsAdmin();
@@ -459,6 +445,70 @@ const MODEL_NAME = "Test Action Model";
           }
         });
       });
+
+      it("properly loads date and time fields for implicit update actions", () => {
+        createModelFromTable(TEST_COLUMNS_TABLE);
+        cy.get("@modelId").then(id => {
+          createImplicitAction({
+            kind: "update",
+            model_id: id,
+          });
+        });
+
+        createDashboardWithActionButton({
+          actionName: "Update",
+          idFilter: true,
+        });
+
+        filterWidget().click();
+        addWidgetStringFilter("1");
+
+        clickHelper("Update");
+
+        cy.wait("@executePrefetch");
+
+        const oldRow = many_data_types_data[0];
+
+        modal().within(() => {
+          assertInputValue({
+            fieldName: "Date",
+            fieldType: "date",
+            oldValue: oldRow.date,
+          });
+
+          assertInputValue({
+            fieldName: "Datetime",
+            fieldType: "datetime-local",
+            oldValue: oldRow.datetime.replace(" ", "T"),
+          });
+
+          assertInputValue({
+            fieldName: "Datetimetz",
+            fieldType: "datetime-local",
+            oldValue: oldRow.datetimeTZ.replace(" ", "T"),
+          });
+
+          assertInputValue({
+            fieldName: "Time",
+            fieldType: "time",
+            oldValue: oldRow.time,
+          });
+
+          assertInputValue({
+            fieldName: "Timestamp",
+            fieldType: "datetime-local",
+            oldValue: oldRow.timestamp.replace(" ", "T"),
+          });
+
+          assertInputValue({
+            fieldName: "Timestamptz",
+            fieldType: "datetime-local",
+            oldValue: oldRow.timestampTZ.replace(" ", "T"),
+          });
+        });
+      });
+
+      it("properly saves date and time fields for implicit update actions", () => {});
     },
   );
 });
@@ -537,6 +587,12 @@ const changeValue = ({ fieldName, fieldType, oldValue, newValue }) => {
     .should("have.value", oldValue)
     .clear()
     .type(newValue);
+};
+
+const assertInputValue = ({ fieldName, fieldType, oldValue }) => {
+  cy.findByPlaceholderText(fieldName)
+    .should("have.attr", "type", fieldType)
+    .should("have.value", oldValue);
 };
 
 const clickHelper = buttonName => {
