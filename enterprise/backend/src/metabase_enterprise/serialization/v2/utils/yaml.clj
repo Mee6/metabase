@@ -2,10 +2,22 @@
   (:require
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [metabase.models.serialization.base :as serdes.base])
+   [metabase.models.serialization.base :as serdes.base]
+   [metabase.util.date-2 :as u.date]
+   [yaml.reader :as y.reader]
+   [yaml.writer :as y.writer])
   (:import
    (java.io File)
-   (java.nio.file Path)))
+   (java.nio.file Path)
+   (java.time.temporal Temporal)))
+
+(extend-type Temporal y.reader/YAMLReader
+             (decode [data]
+               (u.date/parse data)))
+
+(extend-type Temporal y.writer/YAMLWriter
+             (encode [data]
+               (u.date/format data)))
 
 (set! *warn-on-reflection* true)
 

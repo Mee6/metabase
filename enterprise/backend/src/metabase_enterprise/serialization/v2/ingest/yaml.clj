@@ -8,17 +8,11 @@
    [metabase-enterprise.serialization.v2.utils.yaml :as u.yaml]
    [metabase.util.date-2 :as u.date]
    [metabase.util.log :as log]
-   [yaml.core :as yaml]
-   [yaml.reader :as y.reader])
+   [yaml.core :as yaml])
   (:import
-   (java.io File)
-   (java.time.temporal Temporal)))
+   (java.io File)))
 
 (set! *warn-on-reflection* true)
-
-(extend-type Temporal y.reader/YAMLReader
-             (decode [data]
-               (u.date/parse data)))
 
 (defn- build-settings [file]
   (let [settings (yaml/from-file file)]
